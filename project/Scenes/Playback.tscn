@@ -1,0 +1,50 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://Scripts/Playback.gd" type="Script" id=1]
+[ext_resource path="res://gdnative/procedural_engine_audio/engine_audio_player.gdns" type="Script" id=2]
+[ext_resource path="res://Outputs/EngineTest2.wav" type="AudioStream" id=3]
+[ext_resource path="res://ExportTest.wav" type="AudioStream" id=4]
+[ext_resource path="res://Outputs/EngineTest.wav" type="AudioStream" id=5]
+
+[sub_resource type="AudioEffectEQ" id=2]
+resource_name = "EQ"
+band_db/32_hz = -2.3
+band_db/100_hz = -1.4
+band_db/320_hz = 8.2
+band_db/1000_hz = 11.1
+band_db/3200_hz = 11.6
+band_db/10000_hz = 11.8
+
+[sub_resource type="AudioEffectReverb" id=3]
+resource_name = "Reverb"
+predelay_feedback = 0.0
+room_size = 0.6
+hipass = 0.15
+dry = 0.7
+wet = 0.3
+
+[sub_resource type="AudioStreamGenerator" id=1]
+
+[node name="Playback" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 1 )
+max_rpm = 10000.0
+rev_rpm = 500.0
+acceleration = 8000.0
+decceleration = 4000.0
+effects = [ SubResource( 2 ), SubResource( 3 ) ]
+
+[node name="Engine" type="AudioStreamPlayer" parent="."]
+stream = SubResource( 1 )
+script = ExtResource( 2 )
+engine_stream = ExtResource( 5 )
+combustion_stream = ExtResource( 3 )
+max_rpm = 15000.0
+rev_inset = 0.5
+rev_outset = 1.0
+combustion_volume = 2.0
+engine_revving_volume = 0.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 4 )

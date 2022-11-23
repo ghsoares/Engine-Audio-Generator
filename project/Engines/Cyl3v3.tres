@@ -1,0 +1,108 @@
+[gd_resource type="Resource" load_steps=17 format=2]
+
+[ext_resource path="res://gdnative/procedural_engine_audio/procedural_engine_audio.gdnlib" type="GDNativeLibrary" id=1]
+[ext_resource path="res://gdnative/procedural_engine_audio/engine_config.gdns" type="Script" id=2]
+
+[sub_resource type="NativeScript" id=1]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=2]
+script = SubResource( 1 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.14669
+intake_pipe_length = 0.130137
+exhaust_pipe_length = 1.00228
+extractor_pipe_length = 0.504566
+crank_offset = 0.0
+
+[sub_resource type="NativeScript" id=3]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=4]
+script = SubResource( 3 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.303653
+intake_pipe_length = 0.146119
+exhaust_pipe_length = 1.00457
+extractor_pipe_length = 0.502283
+crank_offset = 0.748858
+
+[sub_resource type="NativeScript" id=5]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=6]
+script = SubResource( 5 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.101598
+intake_pipe_length = 0.130137
+exhaust_pipe_length = 1.00457
+extractor_pipe_length = 0.502283
+crank_offset = 0.246575
+
+[sub_resource type="NativeScript" id=7]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=8]
+script = SubResource( 7 )
+cavity_length = 0.0331381
+
+[sub_resource type="NativeScript" id=9]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=10]
+script = SubResource( 9 )
+cavity_length = 0.0550194
+
+[sub_resource type="NativeScript" id=11]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=12]
+script = SubResource( 11 )
+cavity_length = 0.158955
+
+[sub_resource type="NativeScript" id=13]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 1 )
+
+[sub_resource type="Resource" id=14]
+script = SubResource( 13 )
+cavity_length = 0.0324543
+
+[resource]
+resource_name = "Cyl3v3"
+script = ExtResource( 2 )
+rpm = 778.0
+volume = 0.5
+intake_volume = 1.0
+exhaust_volume = 0.5
+vibrations_volume = 0.2
+dc_filter_frequency = 0.521835
+sample_rate = 44100
+vibrations_filter_frequency = 94.2827
+intake_noise_factor = 0.0
+intake_noise_filter_frequency = 498.84
+intake_valve_shift = -0.10443
+exhaust_valve_shift = 0.101266
+crankshaft_fluctuation = 0.300633
+crankshaft_fluctuation_filter_frequency = 60.5696
+straight_pipe_extractor_side_refl = 0.0611814
+straight_pipe_muffler_side_refl = 0.0021097
+straight_pipe_length = 2.00274
+output_side_refl = -0.136076
+muffler_elements_output = [ SubResource( 8 ), SubResource( 10 ), SubResource( 12 ), SubResource( 14 ) ]
+cylinder_intake_opened_refl = 0.00421941
+cylinder_intake_closed_refl = 0.457806
+cylinder_exhaust_opened_refl = 0.0
+cylinder_exhaust_closed_refl = 0.698312
+cylinder_intake_open_end_refl = -0.751055
+cylinder_extractor_open_end_refl = 0.0021097
+cylinder_elements = [ SubResource( 2 ), SubResource( 4 ), SubResource( 6 ) ]

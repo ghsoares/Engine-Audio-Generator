@@ -1,0 +1,244 @@
+[gd_resource type="Resource" load_steps=31 format=2]
+
+[ext_resource path="res://gdnative/procedural_engine_audio/engine_config.gdns" type="Script" id=1]
+[ext_resource path="res://gdnative/procedural_engine_audio/procedural_engine_audio.gdnlib" type="GDNativeLibrary" id=2]
+
+[sub_resource type="NativeScript" id=1]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=2]
+script = SubResource( 1 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.504566
+exhaust_pipe_length = 0.497717
+extractor_pipe_length = 0.488584
+crank_offset = 0.0
+
+[sub_resource type="NativeScript" id=3]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=4]
+script = SubResource( 3 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.497717
+exhaust_pipe_length = 0.465753
+extractor_pipe_length = 0.46347
+crank_offset = 0.0625
+
+[sub_resource type="NativeScript" id=5]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=6]
+script = SubResource( 5 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.484018
+exhaust_pipe_length = 0.477169
+extractor_pipe_length = 0.477169
+crank_offset = 0.125
+
+[sub_resource type="NativeScript" id=7]
+class_name = "EngineCylinderConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=8]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.515982
+exhaust_pipe_length = 0.497717
+extractor_pipe_length = 0.506849
+crank_offset = 0.1875
+
+[sub_resource type="Resource" id=9]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.506849
+exhaust_pipe_length = 0.5
+extractor_pipe_length = 0.5
+crank_offset = 0.25
+
+[sub_resource type="Resource" id=10]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.511416
+exhaust_pipe_length = 0.504566
+extractor_pipe_length = 0.515982
+crank_offset = 0.3125
+
+[sub_resource type="Resource" id=11]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.518265
+exhaust_pipe_length = 0.5
+extractor_pipe_length = 0.484018
+crank_offset = 0.375
+
+[sub_resource type="Resource" id=12]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.506849
+exhaust_pipe_length = 0.493151
+extractor_pipe_length = 0.484018
+crank_offset = 0.4375
+
+[sub_resource type="Resource" id=13]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.474886
+exhaust_pipe_length = 0.479452
+extractor_pipe_length = 0.454338
+crank_offset = 0.5
+
+[sub_resource type="Resource" id=14]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.4375
+exhaust_pipe_length = 0.451389
+extractor_pipe_length = 0.444444
+crank_offset = 0.5625
+
+[sub_resource type="Resource" id=15]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.472222
+exhaust_pipe_length = 0.456019
+extractor_pipe_length = 0.456019
+crank_offset = 0.625
+
+[sub_resource type="Resource" id=16]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.444444
+exhaust_pipe_length = 0.44213
+extractor_pipe_length = 0.4375
+crank_offset = 0.6875
+
+[sub_resource type="Resource" id=17]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.462963
+exhaust_pipe_length = 0.449074
+extractor_pipe_length = 0.451389
+crank_offset = 0.75
+
+[sub_resource type="Resource" id=18]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.462963
+exhaust_pipe_length = 0.474537
+extractor_pipe_length = 0.474537
+crank_offset = 0.8125
+
+[sub_resource type="Resource" id=19]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.472222
+exhaust_pipe_length = 0.456019
+extractor_pipe_length = 0.467593
+crank_offset = 0.875
+
+[sub_resource type="Resource" id=20]
+script = SubResource( 7 )
+piston_motion_factor = 2.43
+ignition_factor = 5.0
+ignition_time = 0.5
+intake_pipe_length = 0.490741
+exhaust_pipe_length = 0.488426
+extractor_pipe_length = 0.486111
+crank_offset = 0.9375
+
+[sub_resource type="NativeScript" id=21]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=22]
+script = SubResource( 21 )
+cavity_length = 0.153485
+
+[sub_resource type="NativeScript" id=23]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=24]
+script = SubResource( 23 )
+cavity_length = 0.154853
+
+[sub_resource type="NativeScript" id=25]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=26]
+script = SubResource( 25 )
+cavity_length = 0.157588
+
+[sub_resource type="NativeScript" id=27]
+class_name = "EngineMufflerConfig"
+library = ExtResource( 2 )
+
+[sub_resource type="Resource" id=28]
+script = SubResource( 27 )
+cavity_length = 0.158955
+
+[resource]
+resource_name = "Cyl16v1"
+script = ExtResource( 1 )
+rpm = 300.0
+volume = 0.5
+intake_volume = 0.5
+exhaust_volume = 0.25
+vibrations_volume = 0.1
+dc_filter_frequency = 0.5
+sample_rate = 44100
+vibrations_filter_frequency = 92.0
+intake_noise_factor = 0.2
+intake_noise_frequency = 100.0
+intake_noise_filter_frequency = 10900.0
+intake_valve_shift = -0.101266
+exhaust_valve_shift = 0.103376
+crankshaft_fluctuation = 0.15
+crankshaft_fluctuation_frequency = 100.0
+crankshaft_fluctuation_filter_frequency = 57.0
+straight_pipe_extractor_side_refl = 0.06
+straight_pipe_muffler_side_refl = 0.0
+straight_pipe_length = 2.0
+output_side_refl = -0.14
+muffler_elements_output = [ SubResource( 22 ), SubResource( 24 ), SubResource( 26 ), SubResource( 28 ) ]
+cylinder_intake_opened_refl = 0.0675105
+cylinder_intake_closed_refl = 1.0
+cylinder_exhaust_opened_refl = -0.0021097
+cylinder_exhaust_closed_refl = 0.7
+cylinder_intake_open_end_refl = -0.75
+cylinder_extractor_open_end_refl = 0.0
+cylinder_elements = [ SubResource( 2 ), SubResource( 4 ), SubResource( 6 ), SubResource( 8 ), SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ), SubResource( 20 ) ]
