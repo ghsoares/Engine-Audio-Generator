@@ -9,7 +9,7 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "",
+"base": "Reference",
 "class": "EngineAudioGenerator",
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_audio_generator.gdns"
@@ -19,22 +19,22 @@ _global_script_classes=[ {
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_audio_player.gdns"
 }, {
-"base": "",
+"base": "Reference",
 "class": "EngineAudioRecorder",
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_audio_recorder.gdns"
 }, {
-"base": "",
+"base": "Resource",
 "class": "EngineConfig",
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_config.gdns"
 }, {
-"base": "",
+"base": "Resource",
 "class": "EngineCylinderConfig",
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_cylinder_config.gdns"
 }, {
-"base": "",
+"base": "Resource",
 "class": "EngineMufflerConfig",
 "language": "NativeScript",
 "path": "res://gdnative/procedural_engine_audio/engine_muffler_config.gdns"
@@ -88,6 +88,16 @@ common/drop_mouse_on_gui_input_disabled=true
 accelerate={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":87,"physical_scancode":0,"unicode":0,"echo":false,"script":null)
+ ]
+}
+gear_up={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777237,"physical_scancode":0,"unicode":0,"echo":false,"script":null)
+ ]
+}
+gear_down={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777238,"physical_scancode":0,"unicode":0,"echo":false,"script":null)
  ]
 }
 
