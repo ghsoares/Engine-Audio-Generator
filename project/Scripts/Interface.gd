@@ -591,19 +591,25 @@ func reset_buffer() -> void:
 # Called to export audio
 func export() -> void:
 	var recorder = EngineAudioRecorder.new()
-	
-	recorder.min_rpm = 60
-	recorder.top_rpm = 120
-	recorder.sample_count = 2
-	recorder.preheat_cycles = 8
+
+	recorder.min_rpm = 1000
+	recorder.top_rpm = 12000
+	recorder.sample_count = 8
+	recorder.padding_frames = 64
+	recorder.fade_time = 0.1
+	recorder.preheat_time = 1
 	recorder.duration_per_sample = 1.0
 	recorder.engine_configuration = engine_config
 	recorder.include_audio_header = true
-	recorder.record()
-	var audio: AudioStreamSample = recorder.get_recording()
 
-	# print(ResourceSaver.save("res://ResSaveTest.tres", audio))
-	audio.save_to_wav("res://ExportTest.wav")
+	recorder.record()
+	var save_path: String = "res://Outputs/Cyl8v10/"
+	var crankshaft_audio: AudioStreamSample = recorder.get_crankshaft_recording()
+	var ignition_audio: AudioStreamSample = recorder.get_ignition_recording()
+	var exhaust_audio: AudioStreamSample = recorder.get_exhaust_recording()
+	print("Crankshaft save status: %d" % crankshaft_audio.save_to_wav(save_path + "Crankshaft.wav"))
+	print("Ignition save status: %d" % ignition_audio.save_to_wav(save_path + "Ignition.wav"))
+	print("Exhaust save status: %d" % exhaust_audio.save_to_wav(save_path + "Exhaust.wav"))
 
 # Called to save the engine config
 func save_engine_config(path: String) -> void:

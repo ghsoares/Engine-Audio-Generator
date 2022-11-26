@@ -94,6 +94,7 @@ public:
 	// Generation
 	void clear_buffer();
 	void fill_buffer(float *p_buffer, int p_num_frames, int p_num_channels);
+	void fill_channel_buffers(float *p_intake_buffer, float *p_vibration_buffer, float *p_exhaust_buffer, int p_num_frames, int p_num_channels);
 	void skip_frames(int p_num_frames);
 
 	// Mixer

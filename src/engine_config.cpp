@@ -412,6 +412,44 @@ void EngineConfig::fill_buffer(float *p_buffer, int p_num_frames, int p_num_chan
 	}
 }
 
+void EngineConfig::fill_channel_buffers(float *p_intake_buffer, float *p_vibration_buffer, float *p_exhaust_buffer, int p_num_frames, int p_num_channels) {
+	if (engine_dirty) {
+		build_engine();
+	}
+
+	ERR_FAIL_COND(!engine_valid);
+
+	waveguides_dampened = false;
+
+	float inc = rpm / (sample_rate * 120.f);
+	float noise_inc = (rpm / (sample_rate * 120.f)) / 500.f;
+
+	for (int frame = 0; frame < p_num_frames; frame++) {
+		engine->crankshaft_pos = Math::fmod(engine->crankshaft_pos + inc, 1.f);
+		engine->noise_pos = Math::fmod(engine->noise_pos + noise_inc, 1.f);
+
+		float intake_channel;
+		float vibrations_channel;
+		float exhaust_channel;
+		bool channels_dampened;
+
+		gen(intake_channel, vibrations_channel, exhaust_channel, channels_dampened);
+	
+		intake_channel *= intake_volume * volume;
+		vibrations_channel *= vibrations_volume * volume;
+		exhaust_channel *= exhaust_volume * volume;
+
+		waveguides_dampened = waveguides_dampened || channels_dampened;
+
+		for (int c = 0; c < p_num_channels; c++) {
+			//p_buffer[frame * p_num_channels + c] = mixed;
+			p_intake_buffer[frame * p_num_channels + c] = intake_channel;
+			p_vibration_buffer[frame * p_num_channels + c] = vibrations_channel;
+			p_exhaust_buffer[frame * p_num_channels + c] = exhaust_channel;
+		}
+	}
+}
+
 void EngineConfig::skip_frames(int p_num_frames) {
 	if (engine_dirty) {
 		build_engine();
