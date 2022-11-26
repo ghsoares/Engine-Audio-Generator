@@ -3,296 +3,285 @@
 
 using namespace godot;
 
-void update_sample_buffer(
-	PoolByteArray sample_data,
-	Vector2 *&buffer,
-	uint32_t &buffer_size,
-	bool is_16_bit
-) {
-	PoolByteArray::Read sample_read = sample_data.read();
+void EngineAudioPlayer::update_channel(EngineAudioChannel *channel, Ref<AudioStreamSample> stream) {
+	bool channel_valid = false;
 
-	if (is_16_bit) {
-		uint32_t data_size = sample_data.size() / 2;
-		buffer_size = data_size / 2;
-		const int16_t *byte_data = (const int16_t *)sample_read.ptr();
-		buffer = new Vector2[buffer_size];
+	int start_off = 0;
+	
+	if (stream.is_valid()) {
+		// Supports only 16 bit pcm stereo file
+		if (stream->get_format() == AudioStreamSample::FORMAT_16_BITS && stream->is_stereo()) {
+			PoolByteArray data = stream->get_data();
+			if (data.size() > 4) {
+				// Read data
+				PoolByteArray::Read data_read = data.read();
+				uint16_t *buffer = (uint16_t *)data_read.ptr();
+				// Identify as engine audio file
+				if (buffer[0] == 0x5555 && buffer[1] == 0xAAAA) {
+					// Get version
+					uint32_t version = (uint32_t)(buffer[2]) | ((uint32_t)(buffer[3]) << 16);
+					if (version == 0) {
+						// Get data size
+						uint32_t data_size = (uint32_t)(buffer[4]) | ((uint32_t)(buffer[5]) << 16);
 
-		for (uint32_t j = 0; j < buffer_size; j++) {
-			float l = byte_data[j * 2 + 0] / (float)(1 << 15);
-			float r = byte_data[j * 2 + 1] / (float)(1 << 15);
+						// Get number of samples
+						uint32_t sample_count = (uint32_t)(buffer[6]) | ((uint32_t)(buffer[7]) << 16);
 
-			buffer[j] = Vector2(l, r);
+						// Get padding frames
+						uint32_t padding_frames = (uint32_t)(buffer[8]) | ((uint32_t)(buffer[9]) << 16);
+
+						// Move buffer
+						buffer = buffer + 10;
+						start_off += 5;
+
+						// Construct array of frames
+						if (channel->frames) {
+							delete[] channel->frames;
+						}
+						channel->frames = new Vector2[data_size / 4];
+						channel->frame_count = data_size / 4;
+						
+						// Construct array of samples
+						if (channel->samples) {
+							delete[] channel->samples;
+						}
+						channel->samples = new EngineAudioSample[sample_count]();
+						channel->sample_count = sample_count;
+
+						// Get channel sample rate
+						channel->sample_rate = (float)stream->get_mix_rate();
+
+						// For each sample
+						for (uint32_t i = 0; i < sample_count; i++) {
+							// Get rpm
+							uint32_t rpmi = (uint32_t)(buffer[0]) | ((uint32_t)(buffer[1]) << 16);
+							float rpm;
+							memcpy(&rpm, &rpmi, sizeof(uint32_t));
+
+							// Get start offset
+							int32_t start = (int32_t)(buffer[2]) | ((int32_t)(buffer[3]) << 16);
+
+							// Get end offset
+							int32_t end = (int32_t)(buffer[4]) | ((int32_t)(buffer[5]) << 16);
+
+							// Get the sample
+							EngineAudioSample *sample = &channel->samples[i];
+
+							// Set the variables
+							sample->rpm = rpm;
+							sample->start = start;
+							sample->end = end;
+							sample->sample_rate_ratio = channel->sample_rate / (float)(end - start);
+
+							// Offset the buffer
+							buffer = buffer + 6;
+							start_off += 3;
+						}
+
+						// Skip padding frames
+						buffer = buffer + (padding_frames * 2);
+						start_off += padding_frames;
+
+						// For each frame
+						for (uint32_t i = 0; i < data_size / 4; i++) {
+							// Get the data
+							float l = (int16_t)buffer[0] / (float)(1 << 15);
+							float r = (int16_t)buffer[1] / (float)(1 << 15);
+
+							// Set the frame
+							channel->frames[i] = Vector2(l, r);
+							
+							buffer = buffer + 2;
+						}
+
+						channel_valid = true;
+					} else {
+						WARN_PRINT("Invalid engine audio file version");
+					}
+				} else {
+					WARN_PRINT("Invalid engine audio file identifier");
+				}
+			} else {
+				WARN_PRINT("Engine audio file too small");
+			}
+		} else {
+			WARN_PRINT("Engine audio file only supports 16 bit PCM stereo data");
 		}
-	} else {
-		uint32_t data_size = sample_data.size();
-		buffer_size = data_size / 2;
-		const int8_t *byte_data = (const int8_t *)sample_read.ptr();
-		buffer = new Vector2[buffer_size];
-
-		for (uint32_t j = 0; j < buffer_size; j++) {
-			float l = byte_data[j * 2 + 0] / (float)(1 << 7);
-			float r = byte_data[j * 2 + 1] / (float)(1 << 7);
-
-			buffer[j] = Vector2(l, r);
-		}
 	}
+
+	if (!channel_valid) {
+		if (channel->frames) delete[] channel->frames;
+		if (channel->samples) delete[] channel->samples;
+		channel->frames = nullptr;
+		channel->samples = nullptr;
+		channel->frame_count = 0;
+		channel->sample_count = 0;
+		channel->sample_rate = 44100;
+		WARN_PRINT("Invalid engine audio file");
+	}	
+	
+	channel->dirty = false;
+
+	// Godot::print("----------------------------");
+	// Godot::print(
+	// 	"frame_count:{0}\nsample_count:{1}\nsample_rate:{2}", 
+	// 	channel->frame_count, 
+	// 	channel->sample_count, 
+	// 	channel->sample_rate
+	// );
+	// for (int i = 0; i < channel->sample_count; i++) {
+	// 	EngineAudioSample *sample = &channel->samples[i];
+
+	// 	Godot::print(
+	// 		"rpm:{0}\nstart:{1}\nend:{2}\nsample_rate_ratio:{3}", 
+	// 		sample->rpm,
+	// 		sample->start + start_off,
+	// 		sample->end + start_off,
+	// 		sample->sample_rate_ratio
+	// 	);
+	// }
+	// Godot::print("----------------------------");
 }
 
-Vector2 sample_audio(
-	Vector2 *audio_buffer,
-	uint32_t audio_size,
-	float time
-) {
-	time *= audio_size;
-	uint32_t i = (uint32_t)time;
-	uint32_t j = i + 1;
-	float fract = Math::fmod(time, 1.f);
-
-	Vector2 a = audio_buffer[i % audio_size];
-	Vector2 b = audio_buffer[j % audio_size];
-
-	return a * (1 - fract) + b * fract;
+void EngineAudioPlayer::update_dirty_channels() {
+	if (crankshaft_channel->dirty) update_channel(crankshaft_channel, crankshaft_stream);
+	if (ignition_channel->dirty) update_channel(ignition_channel, ignition_stream);
+	if (exhaust_channel->dirty) update_channel(exhaust_channel, exhaust_stream);
 }
 
-void EngineAudioPlayer::update_engine_samples() {
-	if (engine_samples) {
-		delete[] engine_samples;
-	}
-
-	if (!engine_stream.is_valid()) {
-		engine_samples = nullptr;
-		engine_samples_size = 0;
-		return;
-	}
-
-	ERR_FAIL_COND(engine_stream->get_format() == AudioStreamSample::FORMAT_IMA_ADPCM);
-
-	update_sample_buffer(engine_stream->get_data(), engine_samples, engine_samples_size, engine_stream->get_format() == AudioStreamSample::FORMAT_16_BITS);
-
-	engine_sample_rate = (uint32_t)engine_stream->get_mix_rate();
-}
-
-void EngineAudioPlayer::update_combustion_samples() {
-	if (combustion_samples) {
-		delete[] combustion_samples;
-	}
-
-	if (!combustion_stream.is_valid()) {
-		combustion_samples = nullptr;
-		combustion_samples_size = 0;
-		return;
-	}
-
-	ERR_FAIL_COND(combustion_stream->get_format() == AudioStreamSample::FORMAT_IMA_ADPCM);
-
-	update_sample_buffer(combustion_stream->get_data(), combustion_samples, combustion_samples_size, combustion_stream->get_format() == AudioStreamSample::FORMAT_16_BITS);
-
-	combustion_sample_rate = (uint32_t)combustion_stream->get_mix_rate();
-}
-
-// void EngineAudioPlayer::update_rpm(float delta) {
-// 	acc_factor = acceleration_factor;
-// 	dec_factor = decceleration_factor;
-
-// 	if (revving) {
-// 		acc_factor = 0;
-// 	}
-
-// 	float acc = acceleration * acc_factor * delta;
-// 	float dec = decceleration * dec_factor * delta;
-
-// 	float dif;
-
-// 	// Decceleration
-// 	dif = idle_rpm - current_rpm;
-// 	dif = Math::clamp(dif, -dec, dec);
-// 	current_rpm += dif;
-
-// 	// Acceleration
-// 	dif = max_rpm - current_rpm;
-// 	dif = Math::clamp(dif, 0.f, acc);
-// 	current_rpm += dif;
-
-// 	if (revving) {
-// 		revving = current_rpm > max_rpm - rev_rpm;
-// 	} else {
-// 		revving = current_rpm >= max_rpm;
-// 	}
-// }
-
-void EngineAudioPlayer::fill_buffer(float elapsed) {
-	uint32_t frames = (uint32_t)playback->get_frames_available();
-	if (frames == 0) return;
-
-	uint32_t max_frames = (uint32_t)(elapsed * mix_rate);
-	frames = frames < max_frames ? frames : max_frames;
+void EngineAudioPlayer::process_audio(float delta) {
+	update_dirty_channels();
 
 	ERR_FAIL_COND(!generator.is_valid());
-	ERR_FAIL_COND(!playback.is_valid());
-	ERR_FAIL_COND(!engine_samples);
-	ERR_FAIL_COND(!combustion_samples);
-	ERR_FAIL_COND(engine_samples_size == 0);
-	ERR_FAIL_COND(combustion_samples_size == 0);
+	ERR_FAIL_COND(!generator_playback.is_valid());
+
+	float mix_rate = generator->get_mix_rate();
+
+	uint32_t frames = (uint32_t)generator_playback->get_frames_available();
+	if (frames == 0) return;
+
+	uint32_t max_frames = (uint32_t)(delta * mix_rate);
+	frames = frames < max_frames ? frames : max_frames;
+
+	ERR_FAIL_COND(!generator_playback->can_push_buffer(frames));
+
+	delta = 1.0f / mix_rate;
 
 	PoolVector2Array buffer;
 	buffer.resize(frames);
 	PoolVector2Array::Write buf = buffer.write();
 	Vector2 *buf_ptr = buf.ptr();
 
-	ERR_FAIL_COND(!playback->can_push_buffer(frames));
+	float volf = volume_blend >= 0 ? volume_blend * delta : -1;
+	float rpmf = rpm_blend >= 0 ? rpm_blend * delta : -1;
 
-	float delta = 1.f / mix_rate;
-	float engine_time_spacing = (float)engine_sample_rate / engine_samples_size;
-	float combustion_time_spacing = (float)combustion_sample_rate / combustion_samples_size;
-
-	float rpm_lerp = 32000.f * delta;
-	float volume_lerp = Math::clamp(256.f * delta, 0.f, 1.f);
+	// crankshaft_channel->print_info(rpm);
 
 	for (uint32_t i = 0; i < frames; i++) {
-		// update_rpm(delta);
-		current_rpm = current_rpm + Math::clamp(desired_rpm - current_rpm, -rpm_lerp, rpm_lerp);
+		internal_rpm += rpmf >= 0 ? Math::clamp(
+			rpm - internal_rpm, -rpmf, rpmf
+		) : rpm - internal_rpm;
 
-		float engine_pitch = current_rpm / engine_rpm;
-		float combustion_pitch = current_rpm / combustion_rpm;
+		crankshaft_channel->advance(internal_rpm, delta);
+		ignition_channel->advance(internal_rpm, delta);
+		exhaust_channel->advance(internal_rpm, delta);
 
-		Vector2 engine_sound = sample_audio(engine_samples, engine_samples_size, engine_pos);
-		Vector2 combustion_sound = sample_audio(combustion_samples, combustion_samples_size, combustion_pos);
+		internal_master_volume += volf >= 0 ? Math::clamp(
+			master_volume - internal_master_volume, -volf, volf
+		) : master_volume - internal_master_volume;
+		internal_crankshaft_volume += volf >= 0 ? Math::clamp(
+			crankshaft_volume - internal_crankshaft_volume, -volf, volf
+		) : crankshaft_volume - internal_crankshaft_volume;
+		internal_ignition_volume += volf >= 0 ? Math::clamp(
+			ignition_volume - internal_ignition_volume, -volf, volf
+		) : ignition_volume - internal_ignition_volume;
+		internal_exhaust_volume += volf >= 0 ? Math::clamp(
+			exhaust_volume - internal_exhaust_volume, -volf, volf
+		) : exhaust_volume - internal_exhaust_volume;
 
-		engine_pos = Math::fmod(engine_pos + engine_pitch * engine_time_spacing * delta, 1.f);
-		combustion_pos = Math::fmod(combustion_pos + combustion_pitch * combustion_time_spacing * delta, 1.f);
+		Vector2 crankshaft = crankshaft_channel->get_sample(internal_rpm) * internal_crankshaft_volume;
+		Vector2 ignition = ignition_channel->get_sample(internal_rpm) * internal_ignition_volume;
+		Vector2 exhaust = exhaust_channel->get_sample(internal_rpm) * internal_exhaust_volume;
 
-		float engine_vol = engine_volume;
-		float combustion_vol = combustion_volume;
-
-		if (revving) {
-			if (rev_pos < 0.5f) {
-				engine_vol = engine_revving_volume;
-				combustion_vol = combustion_revving_volume;
-				rev_pos = Math::fmod(rev_pos + delta / rev_outset, 1.f);
-			} else {
-				rev_pos = Math::fmod(rev_pos + delta / rev_inset, 1.f);
-			}
-			revving = current_rpm >= max_rpm;
-		} else {
-			if (current_rpm >= max_rpm) {
-				rev_pos = 0;
-				revving = true;
-			}
-		}
-
-		engine_vol = last_engine_volume + (engine_vol - last_engine_volume) * volume_lerp;
-		combustion_vol = last_combustion_volume + (combustion_vol - last_combustion_volume) * volume_lerp;
-
-		Vector2 mixed = engine_sound * engine_vol + combustion_sound * combustion_vol;
+		Vector2 mixed = (crankshaft + ignition + exhaust) * internal_master_volume;
 
 		buf_ptr[i] = mixed;
-
-		last_engine_volume = engine_vol;
-		last_combustion_volume = combustion_vol;
 	}
 
-	playback->push_buffer(buffer);
-}
-
-void EngineAudioPlayer::process_audio(float delta) {
-	if ((float)generator->get_mix_rate() != mix_rate) {
-		generator->set_mix_rate(mix_rate);
-	}
-
-	fill_buffer((float)delta);
+	generator_playback->push_buffer(buffer);
 }
 
 void EngineAudioPlayer::_init() {}
 
-void EngineAudioPlayer::_ready() {
-	generator = get_stream();
-	playback = get_stream_playback();
-
-	if (mix_rate > 0) {
-		generator->set_mix_rate(mix_rate);
-	}
-	fill_buffer(1.f/60.f);
-}
-
 EngineAudioPlayer::EngineAudioPlayer() {
-	mix_rate = 44100;
-	desired_rpm = 1000;
-	current_rpm = 1000;
-
-	// idle_rpm = 1000;
-	max_rpm = 8000;
-
-	engine_rpm = 1000;
-	combustion_rpm = 1000;
-	rev_inset = 100;
-	rev_outset = 50;
-
-	// acceleration = 8000;
-	// decceleration = 2000;
-	// acceleration_factor = 0;
-	// decceleration_factor = 0;
-
-	engine_volume = 1;
-	combustion_volume = 1;
-
-	engine_revving_volume = 0.1f;
-	combustion_revving_volume = 0;
-
-	// low_pass_filter_frequency = 128;
-
-	revving = false;
-
 	generator = Ref<AudioStreamGenerator>();
-	playback = Ref<AudioStreamPlayback>();
-	engine_stream = Ref<AudioStreamSample>();
-	combustion_stream = Ref<AudioStreamSample>();
+	generator_playback = Ref<AudioStreamGeneratorPlayback>();
+	crankshaft_stream = Ref<AudioStreamSample>();
+	ignition_stream = Ref<AudioStreamSample>();
+	exhaust_stream = Ref<AudioStreamSample>();
 
-	engine_samples = nullptr;
-	combustion_samples = nullptr;
-	engine_samples_size = 0;
-	combustion_samples_size = 0;
+	crankshaft_channel = new EngineAudioChannel();
+	ignition_channel = new EngineAudioChannel();
+	exhaust_channel = new EngineAudioChannel();
 
-	engine_pos = 0;
-	combustion_pos = 0;
-	rev_pos = 0;
+	rpm = 1000;
+	master_volume = 1;
+	crankshaft_volume = 1;
+	ignition_volume = 1;
+	exhaust_volume = 1;
 
-	// last_mixed = Vector2();
+	internal_rpm = 1000;
+	internal_master_volume = 1;
+	internal_crankshaft_volume = 1;
+	internal_ignition_volume = 1;
+	internal_exhaust_volume = 1;
 
-	last_engine_volume = 0;
-	last_combustion_volume = 0;
+	volume_blend = -1;
+	rpm_blend = -1;
 }
-EngineAudioPlayer::~EngineAudioPlayer() {
-	if (engine_samples) {
-		delete[] engine_samples;
-	}
 
-	if (combustion_samples) {
-		delete[] combustion_samples;
+EngineAudioPlayer::~EngineAudioPlayer() {
+	if (crankshaft_channel) {
+		delete crankshaft_channel;
+	}
+	if (ignition_channel) {
+		delete ignition_channel;
+	}
+	if (exhaust_channel) {
+		delete exhaust_channel;
 	}
 }
 
 void EngineAudioPlayer::_register_methods() {
-	register_method("_ready", &EngineAudioPlayer::_ready);
-	//register_method("_physics_process", &EngineAudioPlayer::_physics_process);
-
+	register_property<EngineAudioPlayer, Ref<AudioStreamGenerator>>(
+		"audio_generator",
+		&EngineAudioPlayer::set_audio_generator,
+		&EngineAudioPlayer::get_audio_generator,
+		Ref<AudioStreamGenerator>()
+	);
+	register_property<EngineAudioPlayer, Ref<AudioStreamGeneratorPlayback>>(
+		"audio_generator_playback",
+		&EngineAudioPlayer::set_audio_generator_playback,
+		&EngineAudioPlayer::get_audio_generator_playback,
+		Ref<AudioStreamGeneratorPlayback>()
+	);
 	register_property<EngineAudioPlayer, Ref<AudioStreamSample>>(
-		"engine_stream",
-		&EngineAudioPlayer::set_engine_stream,
-		&EngineAudioPlayer::get_engine_stream,
+		"crankshaft_stream",
+		&EngineAudioPlayer::set_crankshaft_stream,
+		&EngineAudioPlayer::get_crankshaft_stream,
 		Ref<AudioStreamSample>()
 	);
 	register_property<EngineAudioPlayer, Ref<AudioStreamSample>>(
-		"combustion_stream",
-		&EngineAudioPlayer::set_combustion_stream,
-		&EngineAudioPlayer::get_combustion_stream,
+		"ignition_stream",
+		&EngineAudioPlayer::set_ignition_stream,
+		&EngineAudioPlayer::get_ignition_stream,
 		Ref<AudioStreamSample>()
 	);
-
-	register_property<EngineAudioPlayer, float>(
-		"mix_rate",
-		&EngineAudioPlayer::set_mix_rate,
-		&EngineAudioPlayer::get_mix_rate,
-		44100
+	register_property<EngineAudioPlayer, Ref<AudioStreamSample>>(
+		"exhaust_stream",
+		&EngineAudioPlayer::set_exhaust_stream,
+		&EngineAudioPlayer::get_exhaust_stream,
+		Ref<AudioStreamSample>()
 	);
 	register_property<EngineAudioPlayer, float>(
 		"rpm",
@@ -300,100 +289,42 @@ void EngineAudioPlayer::_register_methods() {
 		&EngineAudioPlayer::get_rpm,
 		1000
 	);
-	// register_property<EngineAudioPlayer, float>(
-	// 	"idle_rpm",
-	// 	&EngineAudioPlayer::set_idle_rpm,
-	// 	&EngineAudioPlayer::get_idle_rpm,
-	// 	1000
-	// );
 	register_property<EngineAudioPlayer, float>(
-		"max_rpm",
-		&EngineAudioPlayer::set_max_rpm,
-		&EngineAudioPlayer::get_max_rpm,
-		8000
-	);
-	register_property<EngineAudioPlayer, float>(
-		"engine_rpm",
-		&EngineAudioPlayer::set_engine_rpm,
-		&EngineAudioPlayer::get_engine_rpm,
-		1000
-	);
-	register_property<EngineAudioPlayer, float>(
-		"combustion_rpm",
-		&EngineAudioPlayer::set_combustion_rpm,
-		&EngineAudioPlayer::get_combustion_rpm,
-		1000
-	);
-	register_property<EngineAudioPlayer, float>(
-		"rev_inset",
-		&EngineAudioPlayer::set_rev_inset,
-		&EngineAudioPlayer::get_rev_inset,
-		100
-	);
-	register_property<EngineAudioPlayer, float>(
-		"rev_outset",
-		&EngineAudioPlayer::set_rev_outset,
-		&EngineAudioPlayer::get_rev_outset,
-		50
-	);
-	register_property<EngineAudioPlayer, float>(
-		"engine_volume",
-		&EngineAudioPlayer::set_engine_volume,
-		&EngineAudioPlayer::get_engine_volume,
+		"master_volume",
+		&EngineAudioPlayer::set_master_volume,
+		&EngineAudioPlayer::get_master_volume,
 		1
 	);
 	register_property<EngineAudioPlayer, float>(
-		"combustion_volume",
-		&EngineAudioPlayer::set_combustion_volume,
-		&EngineAudioPlayer::get_combustion_volume,
+		"crankshaft_volume",
+		&EngineAudioPlayer::set_crankshaft_volume,
+		&EngineAudioPlayer::get_crankshaft_volume,
 		1
 	);
 	register_property<EngineAudioPlayer, float>(
-		"engine_revving_volume",
-		&EngineAudioPlayer::set_engine_revving_volume,
-		&EngineAudioPlayer::get_engine_revving_volume,
-		0.1f
+		"ignition_volume",
+		&EngineAudioPlayer::set_ignition_volume,
+		&EngineAudioPlayer::get_ignition_volume,
+		1
 	);
 	register_property<EngineAudioPlayer, float>(
-		"combustion_revving_volume",
-		&EngineAudioPlayer::set_combustion_revving_volume,
-		&EngineAudioPlayer::get_combustion_revving_volume,
-		0
+		"exhaust_volume",
+		&EngineAudioPlayer::set_exhaust_volume,
+		&EngineAudioPlayer::get_exhaust_volume,
+		1
 	);
-	// register_property<EngineAudioPlayer, float>(
-	// 	"low_pass_filter_frequency",
-	// 	&EngineAudioPlayer::set_low_pass_filter_frequency,
-	// 	&EngineAudioPlayer::get_low_pass_filter_frequency,
-	// 	128
-	// );
+	register_property<EngineAudioPlayer, float>(
+		"rpm_blend",
+		&EngineAudioPlayer::set_rpm_blend,
+		&EngineAudioPlayer::get_rpm_blend,
+		-1
+	);
+	register_property<EngineAudioPlayer, float>(
+		"volume_blend",
+		&EngineAudioPlayer::set_volume_blend,
+		&EngineAudioPlayer::get_volume_blend,
+		-1
+	);
 	
-
-	// register_property<EngineAudioPlayer, float>(
-	// 	"acceleration",
-	// 	&EngineAudioPlayer::set_acceleration,
-	// 	&EngineAudioPlayer::get_acceleration,
-	// 	4000
-	// );
-	// register_property<EngineAudioPlayer, float>(
-	// 	"decceleration",
-	// 	&EngineAudioPlayer::set_decceleration,
-	// 	&EngineAudioPlayer::get_decceleration,
-	// 	2000
-	// );
-
-	// register_property<EngineAudioPlayer, float>(
-	// 	"acceleration_factor",
-	// 	&EngineAudioPlayer::set_acceleration_factor,
-	// 	&EngineAudioPlayer::get_acceleration_factor,
-	// 	0
-	// );
-	// register_property<EngineAudioPlayer, float>(
-	// 	"decceleration_factor",
-	// 	&EngineAudioPlayer::set_decceleration_factor,
-	// 	&EngineAudioPlayer::get_decceleration_factor,
-	// 	0
-	// );
-
-	// register_method("is_revving", &EngineAudioPlayer::is_revving);
 	register_method("process_audio", &EngineAudioPlayer::process_audio);
 }
