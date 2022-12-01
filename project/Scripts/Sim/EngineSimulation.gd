@@ -97,6 +97,9 @@ var revving: bool
 # Current time
 var time: float
 
+# Current time scale
+var time_scale: float = 1.0
+
 # Max piston velocity
 var max_piston_vel: float = 0.0
 
@@ -189,9 +192,16 @@ func _ready() -> void:
 	# Initialize the cylinders
 	cylinders = []
 
+	# Fluctuation
+	var flu: float = PI * 0.5
+
+	# Random number
+	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
+	rng.randomize()
+
 	# Create the cylinders
-	for i in 1:
-		var t: float = i / 1.0
+	for i in 2:
+		var t: float = i / 2.0
 
 		var rot: float = 0.0
 		if i % 2 == 0:
@@ -199,9 +209,10 @@ func _ready() -> void:
 		else:
 			rot = PI * 0.4
 		# rot = TAU * t
+		# rot = 0.0
 		rot += -PI * 0.5
 
-		var off: float = t * PI
+		var off: float = t * TAU + (rng.randf() * 2.0 - 1.0) * flu
 		# off = -rot
 		# off = 0.0
 		# if i % 2 == 0:
@@ -237,6 +248,12 @@ func _physics_process(delta: float) -> void:
 
 # Process the engine
 func engine_process(delta: float) -> void:
+	if Input.is_action_just_pressed("ui_cancel"):
+		if time_scale > 0.5:
+			time_scale = 0.01
+		else:
+			time_scale = 1.0
+
 	# Get number of cylinders
 	var cyl_count: int = cylinders.size()
 
@@ -276,7 +293,7 @@ func engine_process(delta: float) -> void:
 	if frames > 0:
 		# Get each frame delta
 		var dt: float = 1.0 / generator.mix_rate
-		# dt *= 0.1
+		dt *= time_scale
 
 		# For each frame
 		for i in frames:
@@ -309,12 +326,6 @@ func engine_process(delta: float) -> void:
 			# Apply starter
 			crank_applied_ang_vel += starter_acceleration * starter * dt
 
-			# The overall engine velocity
-			var velocity: Vector2 = Vector2.ZERO
-
-			# Current max piston velocity
-			var max_pst_vel: float = 0.0
-
 			# For each cylinder
 			for j in cyl_count:
 				# Get cylinder
@@ -323,23 +334,20 @@ func engine_process(delta: float) -> void:
 				# Get the crank angle relative to the piston
 				var rel_crank_angle: float = fposmod(crank_angle + cyl.crank_offset, TAU * 2.0)
 
-				# Get connection rod position
-				var con_pos: Vector2 = Vector2(
+				# Calculate connecting rod angle
+				var con0: float = PI - asin(crankshaft_connection_radius * sin(rel_crank_angle) / cyl.rod_length)
+
+				# Calculate connecting pin position
+				var pin_pos: Vector2 = Vector2(
 					cos(rel_crank_angle + cyl.rotation) * crankshaft_connection_radius, 
 					sin(rel_crank_angle + cyl.rotation) * crankshaft_connection_radius
 				)
 
-				# Get piston position
-				var piston_pos: Vector2 = Vector2(
-					cos(cyl.rotation) * cyl.piston_position,
-					sin(cyl.rotation) * cyl.piston_position
+				# Calculate connecting pin direction
+				var pin_dir: Vector2 = Vector2(
+					cos(con0 + cyl.rotation), 
+					sin(con0 + cyl.rotation)
 				)
-
-				# Get connection rod offset
-				var con_off: Vector2 = con_pos - piston_pos
-
-				# Get connection rod direction
-				var con_dir: Vector2 = con_off.normalized()
 
 				# Set the previous piston position
 				cyl.piston_prev_position = cyl.piston_position
@@ -363,30 +371,44 @@ func engine_process(delta: float) -> void:
 					var acc: float = gas
 					if revving: acc *= 0.0
 
+					# Get piston force
+					var fz: float = piston_acceleration * dt * acc
+
 					# Apply acceleration
-					crankshaft_impulse(con_pos, con_dir * piston_acceleration * dt * acc)
+					crankshaft_impulse(pin_pos, pin_dir * fz)
 
 				# Apply drag
 				if fposmod(rel_crank_angle, TAU) > PI:
 					crankshaft_impulse(
-						con_pos, 
-						con_dir * cyl.piston_velocity * 
+						pin_pos, 
+						pin_dir * cyl.piston_velocity * 
 						# (engine_noise.get_noise_1d(time * engine_noise_freq) * 0.5 + 0.5) *
 						clamp(piston_drag * dt, 0.0, 1.0)
 					)
 				
-				# Add to overall velocity
-				velocity += get_engine_point_velocity(
-					Vector2(
-						cos(cyl.rotation + engine_rot), 
-						sin(cyl.rotation + engine_rot)
-					) * (crankshaft_connection_radius + cyl.offset)
-				) * cylf
+				# # Add to overall velocity
+				# velocity += get_engine_point_velocity(
+				# 	Vector2(
+				# 		cos(cyl.rotation + engine_rot), 
+				# 		sin(cyl.rotation + engine_rot)
+				# 	) * (crankshaft_connection_radius + cyl.offset)
+				# ) * cylf
 
 			# Apply velocities
 			crank_ang_vel += crank_applied_ang_vel
 			engine_vel += engine_applied_vel
 			engine_ang_vel += engine_applied_ang_vel
+
+			# Get engine velocity at some points
+			var velocity: Vector2 = (get_engine_point_velocity(
+				Vector2( crankshaft_radius, 0.0)
+			) + get_engine_point_velocity(
+				Vector2(-crankshaft_radius, 0.0)
+			) + get_engine_point_velocity(
+				Vector2(0.0,  crankshaft_radius)
+			) + get_engine_point_velocity(
+				Vector2(0.0, -crankshaft_radius)
+			)) * 0.25
 
 			# Get signal
 			var signal: float = 0.0
@@ -455,11 +477,11 @@ func _draw() -> void:
 		# Get cylinder
 		var cyl: Cylinder = cylinders[i]
 
-		# Transform by cylinder rotation and offset
-		draw_set_transform(engine_pos * 100.0, engine_rot + cyl.rotation, Vector2.ONE)
-
 		# Get relative crank angle
 		var rel_crank_angle: float = crank_angle + cyl.crank_offset
+
+		# Transform by cylinder rotation and offset
+		draw_set_transform(engine_pos * 100.0, engine_rot + cyl.rotation, Vector2.ONE)
 
 		# Draw cylinder walls
 		draw_rect(

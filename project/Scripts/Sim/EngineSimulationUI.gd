@@ -15,6 +15,9 @@ onready var gas_label: Label = $VBox/Gas/Value
 # The buffer draw node
 var buffer_draw: RID
 
+# Current rpm
+var rpm: float
+
 # Buffer draw size
 export var buffer_draw_size: Vector2 = Vector2(512.0, 64.0)
 
@@ -38,9 +41,11 @@ func _process(delta: float) -> void:
 
 	# Get the rpm
 	var rpm: float = simulation.crank_ang_vel / TAU * 60.0
+
+	self.rpm = lerp(self.rpm, rpm, clamp(4.0 * delta, 0.0, 1.0))
 	
 	# Set the label text
-	rpm_label.text = "RPM: %d" % round(rpm)
+	rpm_label.text = "RPM: %d" % round(self.rpm)
 
 	# Set the slider value
 	gas_slider.set_block_signals(true)
