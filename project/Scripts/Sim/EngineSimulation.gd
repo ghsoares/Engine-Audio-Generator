@@ -97,6 +97,9 @@ var revving: bool
 # Current time
 var time: float
 
+# Previous air velocity
+var prev_vel: float
+
 # Current time scale
 var time_scale: float = 1.0
 
@@ -205,9 +208,9 @@ func _ready() -> void:
 
 		var rot: float = 0.0
 		if i % 2 == 0:
-			rot = -PI * 0.4
+			rot = -PI * 0.25
 		else:
-			rot = PI * 0.4
+			rot = PI * 0.25
 		# rot = TAU * t
 		# rot = 0.0
 		rot += -PI * 0.5
@@ -410,16 +413,23 @@ func engine_process(delta: float) -> void:
 				Vector2(0.0, -crankshaft_radius)
 			)) * 0.25
 
-			# Get signal
-			var signal: float = 0.0
+			# Get velocity
+			var vel: float = 0.0
 			if abs(velocity.x) > abs(velocity.y):
-				signal = velocity.x
+				vel = velocity.x
 			else:
-				signal = velocity.y
-			signal = velocity.x * engine_vibration_volume
+				vel = velocity.y
+			vel = velocity.x
+
+			# Get signal
+			var signal: float = (vel - prev_vel) * engine_vibration_volume
+
+			# Move prev velocity
+			prev_vel += (vel - prev_vel) * clamp(343 * dt, 0.0, 1.0)
+			# signal = signal * engine_vibration_volume
 
 			# Create frame
-			var frame: Vector2 = Vector2.ONE * signal
+			var frame: Vector2 = Vector2.ONE * signal * att
 
 			# Push frame to generator
 			generator_playback.push_frame(frame)
@@ -446,7 +456,7 @@ func crankshaft_impulse(
 ) -> void:
 	crank_applied_ang_vel += off.cross(j) / crankshaft_connection_radius
 	engine_vel += j
-	engine_applied_ang_vel += off.cross(j) / crankshaft_connection_radius
+	# engine_applied_ang_vel += off.cross(j) / crankshaft_connection_radius
 
 # Called on draw
 func _draw() -> void:
