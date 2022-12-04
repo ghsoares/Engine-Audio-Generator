@@ -598,7 +598,7 @@ func export() -> void:
 	recorder.padding_frames = 64
 	recorder.fade_time = 0.1
 	recorder.preheat_time = 1
-	recorder.duration_per_sample = 1.0
+	recorder.duration_per_sample = 2.0
 	recorder.engine_configuration = engine_config
 	recorder.include_audio_header = true
 
