@@ -1,13 +1,8 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Scripts/Sim/EngineSimulation.gd" type="Script" id=1]
 [ext_resource path="res://Scripts/Sim/EngineSimulationUI.gd" type="Script" id=2]
 [ext_resource path="res://Fonts/FiraCode/ttf/FiraCode-Regular.ttf" type="DynamicFontData" id=3]
-
-[sub_resource type="OpenSimplexNoise" id=4]
-octaves = 1
-period = 1.0
-persistence = 1.0
 
 [sub_resource type="AudioStreamGenerator" id=1]
 mix_rate = 22050.0
@@ -19,21 +14,10 @@ font_data = ExtResource( 3 )
 
 [node name="EngineSimulation" type="Node2D"]
 script = ExtResource( 1 )
-crankshaft_radius = 0.6
-crankshaft_connection_radius = 0.5
-starter_acceleration = 20.0
-piston_acceleration = 8000.0
-engine_spring_force = 100.0
-engine_spring_damp = 1.0
-engine_max_rpm = 10000.0
-engine_margin_rpm = 500.0
-engine_noise = SubResource( 4 )
-engine_noise_freq = 200.0
-engine_noise_fluctuation = 1.0
-buffer_length = 0.2
-cylinder_walls_color = Color( 1, 0.635294, 0.67451, 1 )
-piston_color = Color( 1, 1, 1, 1 )
-piston_joint_color = Color( 0.168627, 0.168627, 0.168627, 1 )
+spring_force = 200000.0
+spring_drag = 256.0
+friction = 4096.0
+volume = 32.0
 
 [node name="Cam" type="Camera2D" parent="."]
 current = true

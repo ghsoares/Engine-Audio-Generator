@@ -74,6 +74,7 @@ anchor_bottom = 1.0
 script = ExtResource( 1 )
 min_rpm = 2000.0
 max_rpm = 12000.0
+margin_rpm = 250.0
 gear_switch_delay = 0.5
 acceleration_range = Vector2( 8000, 1000 )
 decceleration_range = Vector2( 4000, 500 )
@@ -151,3 +152,7 @@ size_flags_horizontal = 0
 custom_fonts/font = SubResource( 6 )
 text = "8000 MPH"
 valign = 1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 3 )
+pitch_scale = 10.93
