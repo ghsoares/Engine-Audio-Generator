@@ -32,32 +32,32 @@ func _ready() -> void:
 	# Set the parent
 	VisualServer.canvas_item_set_parent(buffer_draw, self.get_canvas())
 
-	# Connect slider changed signal
-	gas_slider.connect("value_changed", self, "set_gas")
+	# # Connect slider changed signal
+	# gas_slider.connect("value_changed", self, "set_gas")
 
 # Called every frame
 func _process(delta: float) -> void:
 	draw_buffer()
 
-	# Get the rpm
-	var rpm: float = simulation.crank_ang_vel / TAU * 60.0
+	# # Get the rpm
+	# var rpm: float = simulation.crank_ang_vel / TAU * 60.0
 
-	self.rpm = lerp(self.rpm, rpm, clamp(4.0 * delta, 0.0, 1.0))
+	# self.rpm = lerp(self.rpm, rpm, clamp(4.0 * delta, 0.0, 1.0))
 	
-	# Set the label text
-	rpm_label.text = "RPM: %d" % round(self.rpm)
+	# # Set the label text
+	# rpm_label.text = "RPM: %d" % round(self.rpm)
 
-	# Set the slider value
-	gas_slider.set_block_signals(true)
-	gas_slider.value = simulation.gas
-	gas_slider.set_block_signals(false)
+	# # Set the slider value
+	# gas_slider.set_block_signals(true)
+	# gas_slider.value = simulation.gas
+	# gas_slider.set_block_signals(false)
 
-	# Set the slider label
-	gas_label.text = "%.1f%%" % (simulation.gas * 100)
+	# # Set the slider label
+	# gas_label.text = "%.1f%%" % (simulation.gas * 100)
 
-# Called when the slider value chages
-func set_gas(val: float) -> void:
-	simulation.gas = val
+# # Called when the slider value chages
+# func set_gas(val: float) -> void:
+# 	simulation.gas = val
 
 # Draw the buffer node
 func draw_buffer() -> void:
