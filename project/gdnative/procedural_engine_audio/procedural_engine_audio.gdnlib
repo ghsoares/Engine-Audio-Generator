@@ -7,9 +7,9 @@ reloadable=true
 
 [entry]
 
-OSX.64="res://gdnative/procedural_engine_audio/osx/libgdexample.dylib"
+OSX.64="res://gdnative/procedural_engine_audio/osx/procedural_engine_audio.dylib"
 Windows.64="res://gdnative/procedural_engine_audio/windows/procedural_engine_audio.dll"
-X11.64="res://gdnative/procedural_engine_audio/x11/libgdexample.so"
+X11.64="res://gdnative/procedural_engine_audio/x11/procedural_engine_audio.so"
 
 [dependencies]
 

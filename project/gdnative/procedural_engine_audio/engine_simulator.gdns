@@ -1,0 +1,9 @@
+[gd_resource type="NativeScript" load_steps=2 format=2]
+
+[ext_resource path="res://gdnative/procedural_engine_audio/procedural_engine_audio.gdnlib" type="GDNativeLibrary" id=1]
+
+[resource]
+resource_name = "EngineSimulator"
+class_name = "EngineSimulator"
+library = ExtResource( 1 )
+script_class_name = "EngineSimulator"

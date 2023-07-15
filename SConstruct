@@ -99,6 +99,9 @@ env.Append(LIBPATH=[godot_bindings_path + "/bin/"])
 
 sources = []
 add_sources(sources, "src")
+add_sources(sources, "src/structs")
+add_sources(sources, "src/engine")
+add_sources(sources, "src/engine/physics")
 
 library = env.SharedLibrary(target=env["target_path"] + "/" + platform + "/" + env["target_name"], source=sources)
 Default(library)
